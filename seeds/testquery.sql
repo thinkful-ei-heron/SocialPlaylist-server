@@ -1,23 +1,111 @@
 -- select lists if users_id and list_id are on users_lists
 
--- **update spots
+-- ** Grabcount of record
+BEGIN;
+--  DO $$
+--    DECLARE temp int;
+--    BEGIN
+--  SELECT list_id
+--  INTO temp
+--  FROM liked_by
+--  WHERE list_id = lists.id;
+--  END
+--  $$;
+  SELECT (
+    SELECT COUNT(*)
+      FROM liked_by
+      WHERE list_id = lists.id
+  ) AS likes,
+  (SELECT COUNT(*)
+    FROM liked_by
+    WHERE list_id = lists.id
+    AND liked_by.users_id = 1
+  ) AS liked_by_user,
+  (
+    SELECT COUNT(*)
+    FROM liked_by
+    WHERE list_id = lists.id
+    AND list_id > (
+      SELECT COUNT(*)
+      FROM liked_by
+    ) * .05
+  ) AS on_fire,
+  *
+  FROM lists;
+COMMIT;
 
-UPDATE spots
-SET
-  name = 'NEW NAME'
-WHERE id = (
-  SELECT spot_id
-  FROM lists_spots
-  WHERE lists_spots.list_id = (
-    SELECT users_lists.list_id
-    FROM users_lists
-    WHERE users_lists.users_id = 1
-    AND users_lists.list_id = 1
-  )
-  AND spot_id = 6
-  )
-RETURNING *
-;
+
+-- ** delete refrence
+--BEGIN;
+--      DO $$
+--        DECLARE temp int;
+--        BEGIN
+--    SELECT
+--      users_lists.list_id
+--      INTO temp
+--      FROM users_lists
+--      JOIN lists_spots
+--      ON lists_spots.list_id = users_lists.list_id
+--      WHERE users_lists.users_id = 1
+--      AND lists_spots.spot_id = 1;
+--      IF NOT FOUND THEN
+--        RAISE EXCEPTION 'No access to that record';
+--      END IF;
+--    END
+--    $$;
+--  DELETE
+--  FROM lists_spots
+--  WHERE spot_id = 1
+--  AND EXISTS (
+--    SELECT
+--      users_lists.list_id
+--      FROM users_lists
+--      JOIN lists_spots
+--      ON lists_spots.list_id = users_lists.list_id
+--      WHERE users_lists.users_id = 1
+--      AND lists_spots.spot_id = 1
+--  );
+--    DELETE
+--    FROM spots
+--    WHERE id = 1;
+--COMMIT
+-- ** currently working, but need to have a condition
+--BEGIN;
+--  DELETE
+--  FROM lists_spots
+--  WHERE spot_id = 1
+--  AND list_id = (
+--    SELECT
+--      users_lists.list_id
+--      FROM users_lists
+--      JOIN lists_spots
+--      ON lists_spots.list_id = users_lists.list_id
+--      WHERE users_lists.users_id = 1
+--      AND lists_spots.spot_id = 1
+--  );
+--  DELETE
+--  FROM spots
+--  WHERE id = 1;
+--COMMIT;
+
+-- **update spots
+--
+--UPDATE spots
+--SET
+--  name = 'NEW NAME'
+--WHERE id = (
+--  SELECT spot_id
+--  FROM lists_spots
+--  WHERE lists_spots.list_id = (
+--    SELECT users_lists.list_id
+--    FROM users_lists
+--    WHERE users_lists.users_id = 1
+--    AND users_lists.list_id = 1
+--  )
+--  AND spot_id = 6
+--  )
+--RETURNING *
+--;
 -- **UPDATE lists
 --SET city = 'update 3'
 --WHERE id = (
